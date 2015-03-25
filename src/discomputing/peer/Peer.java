@@ -3,12 +3,15 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
-import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Date;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 
 /* Class: Peer
@@ -16,7 +19,6 @@ import java.util.Date;
  * 				
  */
 public class Peer {
-	private ServerSocket listeningSocket = null;
 	private Socket routerSocket = null;
 	private Socket peerSocket = null;
 	private BufferedReader messageIn = null;
@@ -24,12 +26,14 @@ public class Peer {
 	private DataInputStream dataIn = null;
 	private DataOutputStream dataOut = null;
 	private String name = "";
+	private int portNumber;
 	
 	public Peer(String name, int portNumber) throws IOException{
-		ListeningThread lThread = new ListeningThread(portNumber);
+		this.portNumber = portNumber;
+		ListeningThread lThread = new ListeningThread(this.portNumber);
 		lThread.start();
 		this.name = name;
-		System.out.println("Peer Name: " + name + "\nAddress: " + InetAddress.getLocalHost().getHostAddress()  +"\nListening at port " + portNumber + "\n-----------------------");
+		//System.out.println("Peer Name: " + name + "\nAddress: " + InetAddress.getLocalHost().getHostAddress()  +"\nListening at port " + portNumber + "\n-----------------------");
 	}
 
 	public String getName(){
@@ -37,7 +41,16 @@ public class Peer {
 	}
 	
 	public int getListeningPort(){
-		return listeningSocket.getLocalPort();
+		return portNumber;
+	}
+	
+	public String getAddress(){
+		try {
+			return InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			return "Unable to get Address";
+		}
 	}
 	
 	public void connectToRouter(String routerAddress, int routerPort) throws IOException{
@@ -60,20 +73,39 @@ public class Peer {
 		return dataIn.readInt();
 	}
 	
-	public void sendFile() {
-		// TODO Auto-generated method stub
-		
+	public void sendFile(String fileName) throws IOException {
+		dataOut.writeUTF(fileName);
+		Path filePath = Paths.get("files/",fileName);
+		byte[] bytes = Files.readAllBytes(filePath);
+        dataOut.writeInt(bytes.length); //sends length of file to server
+        dataIn.readUTF(); //blocks until server is ready for file transfer
+  	   	dataOut.write(bytes,0,bytes.length); // transfers file
 	}
 
-	public void receiveFile(String fileName) throws IOException {
-		dataOut.writeUTF(fileName);
-		String extension = dataIn.readUTF();
-		dataOut.writeUTF("extension received");
+	public void receiveFile(String fileFullName) throws IOException {
+		dataOut.writeUTF(fileFullName);
+		String fileName;
+		try{
+			fileName = fileFullName.substring(0, fileFullName.lastIndexOf("."));
+		}
+		catch(Exception e){
+			System.err.println("file" + fileFullName +" not valid name. Please include file extension");
+			return;
+		}
+		String extension = fileFullName.substring(fileFullName.lastIndexOf(".")+1, fileFullName.length());
 		int fileSize = 0;
-		Date date = new Date();
-		FileOutputStream fos = new FileOutputStream("files/TEST_FILE" + date.getTime() + "." + extension);
+		File file = new File("files/" + fileFullName);
+		
+		String newFileName;
+		int fileNumber = 1;
+		while(!file.createNewFile()){
+			newFileName = fileName + "(" + fileNumber + ")";
+			file = new File("files/" + newFileName + "." + extension);
+			fileNumber++;
+		}
+		
+		FileOutputStream fos = new FileOutputStream(file);
 		fileSize = dataIn.readInt();
-		System.out.println("File Size: " + fileSize);
 		dataOut.writeUTF("Ready for file transfer");
 		int totalBytes = 0;
 		byte[] buffer = new byte[fileSize];
@@ -85,14 +117,12 @@ public class Peer {
 			fos.write(buffer,0,packageSize);
 			fos.flush();
 			
-			System.out.println(totalBytes + " = " + fileSize);
-			
 			if(totalBytes >= fileSize){
-				totalBytes -= 3;
 				break;
 			}
 		}
-
+		fos.close();
+		System.out.println("File Received. Saved in files/ directory");
 	}
 
 	public void closePeerConnection() {

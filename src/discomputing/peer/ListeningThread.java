@@ -3,6 +3,7 @@ package discomputing.peer;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -52,7 +53,14 @@ public class ListeningThread extends Thread {
 		while((option = in.readInt()) != 3){
 			switch(option){
 			case 1:
-				System.out.println("Receiving file from peer");
+				String name = in.readUTF();
+				System.out.println("name " + name);
+				try{
+					receiveFile(name);
+				}
+				catch(IOException e){
+					System.err.println("Unable to receive file");
+				}
 				break;
 			case 2:
 				ArrayList<String> fileNames = listFiles();
@@ -66,6 +74,7 @@ public class ListeningThread extends Thread {
 				catch(IOException e){
 					System.err.println("Unable to send file");
 				}
+				break;
 			default:
 				out.writeUTF("invalid option");
 				break;
@@ -85,21 +94,45 @@ public class ListeningThread extends Thread {
 	}
 	
 	public void sendFile(String fileName) throws IOException{
-		System.out.println("Filename: " + fileName);
 		Path filePath = Paths.get("files/",fileName);
 		byte[] bytes = Files.readAllBytes(filePath);
-		byte[] complete = new byte[3];//flag that file is finished
-        complete = "done".getBytes();
-        out.writeUTF(fileName.substring(fileName.lastIndexOf(".")+1, fileName.length())); //Sends the file extension the peer
-        out.flush();
-        System.out.println("Server: " + in.readUTF());
         out.writeInt(bytes.length); //sends length of file to server
-        out.flush();
-        System.out.println(bytes.length);
-        System.out.println("Server: " + in.readUTF()); //blocks until server is ready for file transfer
+        in.readUTF(); //blocks until server is ready for file transfer
   	   	out.write(bytes,0,bytes.length); // transfers file
-  	   	out.flush();
-  	   	out.write(complete,0,3); //sends flag
-  	   	out.flush();
+	}
+	
+	public void receiveFile(String fileFullName) throws IOException {
+		String fileName = fileFullName.substring(0, fileFullName.lastIndexOf("."));
+		String extension = fileFullName.substring(fileFullName.lastIndexOf(".")+1, fileFullName.length());
+		int fileSize = 0;
+		File file = new File("files/" + fileFullName);
+		
+		String newFileName;
+		int fileNumber = 1;
+		while(!file.createNewFile()){
+			newFileName = fileName + "(" + fileNumber + ")";
+			file = new File("files/" + newFileName + "." + extension);
+			fileNumber++;
+		}
+		
+		FileOutputStream fos = new FileOutputStream(file);
+		fileSize = in.readInt();
+		out.writeUTF("Ready for file transfer");
+		int totalBytes = 0;
+		byte[] buffer = new byte[fileSize];
+	
+		int packageSize = 0;
+		while((packageSize = in.read(buffer)) != -1){
+			totalBytes += packageSize;
+			//writes file
+			fos.write(buffer,0,packageSize);
+			fos.flush();
+			
+			if(totalBytes >= fileSize){
+				break;
+			}
+		}
+		fos.close();
+
 	}
 }
