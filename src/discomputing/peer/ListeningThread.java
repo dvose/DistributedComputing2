@@ -64,7 +64,7 @@ public class ListeningThread extends Thread {
 					sendFile(in.readUTF());
 				}
 				catch(IOException e){
-					
+					System.err.println("Unable to send file");
 				}
 			default:
 				out.writeUTF("invalid option");
@@ -85,6 +85,7 @@ public class ListeningThread extends Thread {
 	}
 	
 	public void sendFile(String fileName) throws IOException{
+		System.out.println("Filename: " + fileName);
 		Path filePath = Paths.get("files/",fileName);
 		byte[] bytes = Files.readAllBytes(filePath);
 		byte[] complete = new byte[3];//flag that file is finished
@@ -99,5 +100,6 @@ public class ListeningThread extends Thread {
   	   	out.write(bytes,0,bytes.length); // transfers file
   	   	out.flush();
   	   	out.write(complete,0,3); //sends flag
+  	   	out.flush();
 	}
 }

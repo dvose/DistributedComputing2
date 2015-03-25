@@ -66,6 +66,7 @@ public class Peer {
 	}
 
 	public void receiveFile(String fileName) throws IOException {
+		dataOut.writeUTF(fileName);
 		String extension = dataIn.readUTF();
 		dataOut.writeUTF("extension received");
 		int fileSize = 0;
