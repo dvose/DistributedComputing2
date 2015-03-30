@@ -1,4 +1,4 @@
-package discomputing.peer;
+package CS4253.peer;
 
 import java.io.IOException;
 import java.util.InputMismatchException;
@@ -76,7 +76,14 @@ public class PeerApp {
 		System.out.println("Peer address to connect: ");
 		String peerAddress = in.nextLine();
 		System.out.println("Peer port: ");
-		int peerPort = in.nextInt();
+		int peerPort = 0;
+		try{
+			peerPort = in.nextInt();
+		}
+		catch(InputMismatchException e){
+			in.nextLine();
+			System.err.println("Error: port number must be an integer");
+		}
 		
 		try {
 			peer.connectToPeer(peerAddress, peerPort);

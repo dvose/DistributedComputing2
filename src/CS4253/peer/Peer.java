@@ -1,4 +1,4 @@
-package discomputing.peer;
+package CS4253.peer;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.DataInputStream;
@@ -18,7 +18,7 @@ import java.nio.file.Paths;
  * Description: A Peer is a node that will create connections with other Peers through SRouter.
  * 				
  */
-public class Peer {
+public class Peer{
 	private Socket routerSocket = null;
 	private Socket peerSocket = null;
 	private BufferedReader messageIn = null;
@@ -140,14 +140,10 @@ public class Peer {
 		System.out.println("File Received. Saved in files/ directory");
 	}
 
-	public void closePeerConnection() {
-		try {
-			peerSocket.close();
-			dataIn.close();
-			dataOut.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}	
+	public void closePeerConnection() throws IOException {
+		peerSocket.close();
+		dataIn.close();
+		dataOut.close();
 	}
 	
 	public boolean isConnectedToPeer(){

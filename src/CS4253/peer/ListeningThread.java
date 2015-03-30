@@ -1,4 +1,4 @@
-package discomputing.peer;
+package CS4253.peer;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -50,7 +50,9 @@ public class ListeningThread extends Thread {
 		int option = 0;
 		out.writeUTF("Connected to Peer");
 		
-		while((option = in.readInt()) != 3){
+		boolean connected = true;
+		while(connected){
+			option = in.readInt();
 			switch(option){
 			case 1:
 				String name = in.readUTF();
@@ -75,12 +77,15 @@ public class ListeningThread extends Thread {
 					System.err.println("Unable to send file");
 				}
 				break;
+			case 3:
+				closePeerConnection();
+				connected = false;
+				break;
 			default:
 				out.writeUTF("invalid option");
 				break;
 			}
 		}
-		clientSocket.close();
 	}
 	public ArrayList<String> listFiles(){
 		ArrayList<String> results = new ArrayList<String>();
@@ -154,6 +159,8 @@ public class ListeningThread extends Thread {
 			}
 		}
 		fos.close();
-
+	}
+	public void closePeerConnection() throws IOException{
+		clientSocket.close();
 	}
 }
