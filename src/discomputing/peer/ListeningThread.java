@@ -95,16 +95,37 @@ public class ListeningThread extends Thread {
 	
 	public void sendFile(String fileName) throws IOException{
 		Path filePath = Paths.get("files/",fileName);
-		byte[] bytes = Files.readAllBytes(filePath);
+		byte[] bytes = {};
+		try{ 
+			bytes = Files.readAllBytes(filePath);
+		}
+		catch(IOException e){
+			out.writeInt(-1);
+			return;
+		}
         out.writeInt(bytes.length); //sends length of file to server
         in.readUTF(); //blocks until server is ready for file transfer
   	   	out.write(bytes,0,bytes.length); // transfers file
 	}
 	
 	public void receiveFile(String fileFullName) throws IOException {
-		String fileName = fileFullName.substring(0, fileFullName.lastIndexOf("."));
-		String extension = fileFullName.substring(fileFullName.lastIndexOf(".")+1, fileFullName.length());
+		String fileName = "";
+		String extension = "";
+		try{
+			fileName = fileFullName.substring(0, fileFullName.lastIndexOf("."));
+			extension = fileFullName.substring(fileFullName.lastIndexOf(".")+1, fileFullName.length());
+		}
+		catch(StringIndexOutOfBoundsException e){
+			System.err.println("file " + fileFullName + "not a valid file. Please include extension");
+		}
+		
 		int fileSize = 0;
+		fileSize = in.readInt();
+		
+		//if no file found return
+		if(fileSize == -1){
+			return;
+		}
 		File file = new File("files/" + fileFullName);
 		
 		String newFileName;
@@ -116,7 +137,7 @@ public class ListeningThread extends Thread {
 		}
 		
 		FileOutputStream fos = new FileOutputStream(file);
-		fileSize = in.readInt();
+		
 		out.writeUTF("Ready for file transfer");
 		int totalBytes = 0;
 		byte[] buffer = new byte[fileSize];

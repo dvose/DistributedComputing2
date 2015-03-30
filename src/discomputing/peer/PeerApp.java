@@ -1,6 +1,7 @@
 package discomputing.peer;
 
 import java.io.IOException;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class PeerApp {
@@ -9,11 +10,18 @@ public class PeerApp {
 
 	public static void main(String[] args) {
 		boolean running = true;
+		int port = 0;
 		
 		System.out.print("PEER SETUP\n-----------------------\nPeer Name: ");
 		String name = in.nextLine();
 		System.out.print("Listening Port: ");
-		int port = in.nextInt();
+		try{
+			port = in.nextInt();
+		}
+		catch(InputMismatchException e){
+			System.err.println("Port must be an integer");
+			System.exit(-1);
+		}
 		in.nextLine();
 		System.out.println("-----------------------");		
 		try{
@@ -38,7 +46,7 @@ public class PeerApp {
 				option = in.nextInt();
 			}
 			catch(Exception e){
-				System.out.println("Please select a valid option");
+				in.nextLine();
 			}
 			switch(option){
 			case 1:
@@ -54,6 +62,7 @@ public class PeerApp {
 				System.out.println("ROUTER INFO WILL GO HERE");
 				break;
 			case 4:
+				System.out.println("Peer is exiting. Goodbye!");
 				System.exit(0);
 				break;
 			default:
@@ -81,23 +90,10 @@ public class PeerApp {
 				p2pOptions();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
+				System.err.println("Error Unable to connect");
 				e.printStackTrace();
 			}
 		}
-		
-		/*in.reset();
-		System.out.print("SETUP\n-----------------------\nAddress of p2p Router: \n");
-		String routerAddress = in.nextLine();
-		System.out.print("p2p Router Port Number: ");
-		int routerPort = in.nextInt();
-		
-		try{
-			peer.connectToRouter(routerAddress, routerPort);
-		}
-		catch(Exception e){
-			System.err.println("Could not connect to p2p Router");
-			System.exit(-1);
-		}*/
 	}
 	public static void p2pOptions() throws IOException{
 		int option = 0;
@@ -108,20 +104,22 @@ public class PeerApp {
 						  +"| 2) Receieve File              |\n"
 						  +"| 3) Disconnect from Peer       |\n"
 						  +" -------------------------------\n");
-		option = in.nextInt();
+		try{
+			option = in.nextInt();
+		}
+		catch(InputMismatchException e){
+			in.nextLine();
+			System.out.println("Please select a valid option");
+			return;
+		}
 		peer.p2pSendInt(option);
 		if(option == 1){
 			in.nextLine();
 			System.out.println("File name: ");
 			String fileName = in.nextLine();
 			
-			try{
-				peer.sendFile(fileName);
-				System.out.println("File Sent");
-			}
-			catch(IOException e){
-				System.err.println("Unable to send file");
-			}
+			peer.sendFile(fileName);
+			System.out.println("File Sent");
 		}
 		else if(option == 2){
 			System.out.println("List of Available Files");

@@ -74,9 +74,19 @@ public class Peer {
 	}
 	
 	public void sendFile(String fileName) throws IOException {
-		dataOut.writeUTF(fileName);
+		byte[] bytes = {};
+		dataOut.writeUTF(fileName);	
 		Path filePath = Paths.get("files/",fileName);
-		byte[] bytes = Files.readAllBytes(filePath);
+		try{
+			bytes = Files.readAllBytes(filePath);
+			
+		}
+		catch(IOException e){
+			dataOut.writeInt(-1);
+			System.err.println("file: " + fileName + " not found.");
+			return;
+		}
+		
         dataOut.writeInt(bytes.length); //sends length of file to server
         dataIn.readUTF(); //blocks until server is ready for file transfer
   	   	dataOut.write(bytes,0,bytes.length); // transfers file
@@ -84,18 +94,23 @@ public class Peer {
 
 	public void receiveFile(String fileFullName) throws IOException {
 		dataOut.writeUTF(fileFullName);
-		String fileName;
+		String fileName = "";
+		String extension = "";
 		try{
 			fileName = fileFullName.substring(0, fileFullName.lastIndexOf("."));
+			extension = fileFullName.substring(fileFullName.lastIndexOf(".")+1, fileFullName.length());
 		}
 		catch(Exception e){
-			System.err.println("file" + fileFullName +" not valid name. Please include file extension");
+			System.err.println("file " + fileFullName +" not valid name. Please include file extension");
+		}
+		
+		int fileSize = 0;
+		fileSize = dataIn.readInt();
+		if(fileSize == -1){
+			System.err.println("file: " + fileFullName + " not found.\n");
 			return;
 		}
-		String extension = fileFullName.substring(fileFullName.lastIndexOf(".")+1, fileFullName.length());
-		int fileSize = 0;
 		File file = new File("files/" + fileFullName);
-		
 		String newFileName;
 		int fileNumber = 1;
 		while(!file.createNewFile()){
@@ -105,7 +120,7 @@ public class Peer {
 		}
 		
 		FileOutputStream fos = new FileOutputStream(file);
-		fileSize = dataIn.readInt();
+		
 		dataOut.writeUTF("Ready for file transfer");
 		int totalBytes = 0;
 		byte[] buffer = new byte[fileSize];
@@ -136,6 +151,8 @@ public class Peer {
 	}
 	
 	public boolean isConnectedToPeer(){
+		if(peerSocket == null)
+			return false;
 		return !peerSocket.isClosed();
 	}
 	
