@@ -32,6 +32,26 @@ public class PeerApp {
 			System.exit(-1);
 		}
 		
+		System.out.println("ROUTER CONNECTION\n\n-----------------------\nRouter Address: ");
+		String routerAddress = in.nextLine();
+		
+		System.out.println("Router port: ");
+		int routerPort = 0;
+		try{
+			routerPort = in.nextInt();
+		}
+		catch(InputMismatchException e){
+			System.err.println("Port must be an integer");
+			System.exit(-1);
+		}
+		
+		try {
+			peer.connectToRouter(routerAddress, routerPort);
+		} catch (IOException e1) {
+			System.err.println("Unable to connect to router");
+			System.exit(-1);
+		}
+		
 		while(running){
 			int option = 0;
 			System.out.println(" ---------------------------------\n"
@@ -59,7 +79,7 @@ public class PeerApp {
 								  +"\n------------------------------------------\n");
 				break;
 			case 3:
-				System.out.println("ROUTER INFO WILL GO HERE");
+				System.out.println("Router Address: " + peer.getRouterAddress() + "\nRouter Port: " + peer.getRouterPort());
 				break;
 			case 4:
 				System.out.println("Peer is exiting. Goodbye!");
@@ -73,14 +93,13 @@ public class PeerApp {
 	}	
 	public static void connectP2P(){
 		in.nextLine(); //reset scanner location
-		System.out.println("Peer address to connect: ");
-		String peerAddress = in.nextLine();
-		System.out.println("Peer port: ");
-		int peerPort = in.nextInt();
+		System.out.println("Peer Name: ");
+		String peerName = in.nextLine();
 		
 		try {
-			peer.connectToPeer(peerAddress, peerPort);
-			System.out.println(peer.p2pReadString());
+			peer.connectToPeer(peerName);
+			if(peer.isConnectedToPeer())
+				System.out.println(peer.p2pReadString());
 		} catch (IOException e) {
 			System.out.println("Peer unavailable");
 		}

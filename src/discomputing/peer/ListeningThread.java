@@ -1,16 +1,21 @@
 package discomputing.peer;
 
+import java.io.BufferedWriter;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class ListeningThread extends Thread {
 	private ServerSocket listeningSocket = null;
@@ -139,12 +144,23 @@ public class ListeningThread extends Thread {
 		FileOutputStream fos = new FileOutputStream(file);
 		
 		out.writeUTF("Ready for file transfer");
-		int totalBytes = 0;
 		byte[] buffer = new byte[fileSize];
 	
+		//metrics of file transfer
+		List<Integer> packageSizes = new ArrayList<Integer>();
+		int totalBytes = 0;
+		int numPackages = 0;
+		long totalTimeMillis = 0;
 		int packageSize = 0;
+		long startTime = System.currentTimeMillis();
+		
 		while((packageSize = in.read(buffer)) != -1){
+			
+			//metrics
 			totalBytes += packageSize;
+			packageSizes.add(packageSize);
+			numPackages++;
+			
 			//writes file
 			fos.write(buffer,0,packageSize);
 			fos.flush();
@@ -153,6 +169,20 @@ public class ListeningThread extends Thread {
 				break;
 			}
 		}
+		totalTimeMillis = System.currentTimeMillis() - startTime;
+		
+		//record metrics to log
+		try(PrintWriter out = new PrintWriter(new BufferedWriter(new FileWriter("metrics.csv", true)))) {
+			int sum = 0;
+			for(int i = 0; i < packageSizes.size(); i++){
+				sum += packageSizes.get(i);
+			}
+			float avgPackageSize = sum/packageSizes.size();
+		    out.println(fileFullName+","+totalBytes+","+totalTimeMillis+"," + numPackages + "," + Collections.max(packageSizes)+ "," + Collections.min(packageSizes) + "," + avgPackageSize);
+		}catch (IOException e) {
+		    
+		}
+		
 		fos.close();
 
 	}
