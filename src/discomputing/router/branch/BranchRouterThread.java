@@ -95,7 +95,10 @@ public class BranchRouterThread extends RouterThread {
 				
 			} 
 		} catch (IOException e) {
-			System.err.println("Thread interupted");
+			if(source.equals("Peer")){
+				peerTable.remove(peerName);
+				super.printPeerTable(peerTable);
+			}
 		}
 	}
 

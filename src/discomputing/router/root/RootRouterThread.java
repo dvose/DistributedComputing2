@@ -104,7 +104,14 @@ public class RootRouterThread extends RouterThread {
 			} 
 		}
 		catch (IOException e) {
-			System.err.println("Thread interupted");
+			if(source.equals("BranchRouter")){
+				routerList.remove(branchAddress);
+				printRouterList();
+			}
+			else if(source.equals("Peer")){
+				peerTable.remove(peerName);
+				super.printPeerTable(peerTable);
+			}
 		}
 	}
 

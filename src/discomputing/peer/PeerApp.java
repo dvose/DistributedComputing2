@@ -82,6 +82,7 @@ public class PeerApp {
 				System.out.println("Router Address: " + peer.getRouterAddress() + "\nRouter Port: " + peer.getRouterPort());
 				break;
 			case 4:
+				peer.closeRouterConnection();
 				System.out.println("Peer is exiting. Goodbye!");
 				System.exit(0);
 				break;
