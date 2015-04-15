@@ -12,6 +12,13 @@ import java.util.HashMap;
 import discomputing.helper.PacketParser;
 import discomputing.router.RouterThread;
 
+/* Class: RootRouterThread
+ * Extends: RouterThread
+ * 
+ * Description: RootRouterThread is created by the RootRouter once a connection is made.
+ * 				Used for concurrent connections to multiple Peers and multiple BranchRouters.
+ * 				
+ */
 public class RootRouterThread extends RouterThread {
 	static ArrayList<String[]> routerList = new ArrayList<String[]>();
 	static HashMap<String, String[]> peerTable = new HashMap<String, String[]>();

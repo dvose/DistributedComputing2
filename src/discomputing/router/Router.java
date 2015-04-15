@@ -1,6 +1,11 @@
 package discomputing.router;
 
-
+/* Abstract Class: Router
+ * 
+ * Description: A Router creates a serverSocket on a given port in order to listen for connections
+ * 				If the port is not available, the Router will not be created.
+ * 				An implementation of a Router should be able to listen for connections and close connections
+ */	
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;

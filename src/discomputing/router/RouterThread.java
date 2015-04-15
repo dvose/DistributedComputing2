@@ -9,6 +9,14 @@ import java.util.HashMap;
 import java.util.Set;
 import java.util.Map.Entry;
 
+/* Class: RouterThread
+ * Extends: Thread
+ * 
+ * Description: A RouterThead is used to handle packets sent by Peers.
+ * 				RouterThreads are spawned by Routers.
+ * 				RouterThreads handle Peer Handshakes,  Peer Requests, and printing the Peer Table.
+ * 			    
+ */	
 public class RouterThread extends Thread {
 	protected BufferedReader messageIn = null;
 	protected PrintWriter messageOut = null;

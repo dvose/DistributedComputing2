@@ -8,8 +8,21 @@ import java.util.HashMap;
 import discomputing.helper.PacketParser;
 import discomputing.router.RouterThread;
 
+/* Class: BranchRouterThread
+ * Extends: RouterThread
+ * 
+ * Description: BranchRouterThread is created by a BranchRouter once a connection is made.
+ * 				Used for concurrent connections to multiple Peers.
+ * 				Stores Peer information in peerTable.
+ */
 public class BranchRouterThread extends RouterThread {
+	
+   /* stores Peer connection information. 
+	* The key is the Peer Name.
+	* The value is a the Peer's Address and Peer's Port Number
+	*/
 	static HashMap<String,String[]> peerTable = new HashMap<String, String[]>();
+	
 	Socket rootSocket = null;
 	BufferedReader rootMessageIn = null;
 	PrintWriter rootMessageOut = null;
@@ -30,7 +43,11 @@ public class BranchRouterThread extends RouterThread {
 		try {
 			boolean connected = true;
 			while(connected){
+				
+				//block until a packet has been received
 				packet = messageIn.readLine();
+				
+				//if packet is null, the branch router is no longer connected
 				if(packet == null){
 					if(source.equals("Peer")){
 						peerTable.remove(peerName);
@@ -42,6 +59,8 @@ public class BranchRouterThread extends RouterThread {
 				
 				//handle different packet types
 				String type = parsedPacket.get("Type");
+				
+				//stores the source of the connection.
 				source = parsedPacket.get("Source");
 				
 				//initial peer-router handshake, add peer to peerTable
@@ -84,7 +103,8 @@ public class BranchRouterThread extends RouterThread {
 					else
 						messageOut.println("Type:PeerLookup|Message:Failed");
 				}
-					
+				
+				//handles disconnecting sources
 				else if(type.equals("Disconnect")){
 					//if peer is disconnecting, remove from peer table
 					peerTable.remove(parsedPacket.get("Name"));
@@ -93,7 +113,7 @@ public class BranchRouterThread extends RouterThread {
 					connected = false;
 				}
 				
-			} 
+			}	
 		} catch (IOException e) {
 			if(source.equals("Peer")){
 				peerTable.remove(peerName);
@@ -101,7 +121,11 @@ public class BranchRouterThread extends RouterThread {
 			}
 		}
 	}
-
+	/* Method: forwardToRootRouter
+	 * Description: Used to forward a Peer request to the Root Router. 
+	 * Expected Inputs: originalPacket
+	 * Expected Outputs: true if Peer was found, false if Peer was not found
+	 */
 	private boolean forwardToRootRouter(HashMap<String, String> originalPacket) throws IOException {
 		rootMessageOut.println("Type:PeerRequest|Source:BranchRouter|PeerName:" + originalPacket.get("PeerName")+"|Address:" + address + "|Port:" + port);
 		packet = rootMessageIn.readLine();
